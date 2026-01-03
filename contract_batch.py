@@ -20,10 +20,14 @@ def sanitize_filename(name):
         return "Unknown"
     return re.sub(r'[\\/*?:"<>|]', "", str(name)).replace(" ", "_")
 
-def get_random_doc_date():
+def get_random_doc_date(date_start_str=None):
     """
-    Генерирует случайную дату подписания договора за последние 5 месяцев.
+    Генерирует дату подписания договора.
+    Если передана дата начала работ, договор подписывается в этот же день.
     """
+    if date_start_str:
+        return date_start_str
+        
     today = datetime.now()
     # Примерно 150 дней в 5 месяцах
     random_days_ago = random.randint(0, 150)
@@ -261,14 +265,17 @@ def batch_contracts(csv_file, output_dir="ready_contracts"):
         row = current_rows[row_in_batch_idx]
         
         ispolnitel = global_ispolnitel if global_ispolnitel else row.get('ispolnitel', 'Не указан')
-        doc_date = get_random_doc_date()
+        
+        # Дата договора = За 0-3 дня до даты начала работ
+        date_start = row.get('date_start', '__________')
+        doc_date = get_random_doc_date(date_start)
         
         data = {
             'idx': next_idx,
             'zakazchik': row.get('zakazchik', '__________'),
             'ispolnitel': ispolnitel,
             'uslugi': row.get('uslugi', '__________'),
-            'date_start': row.get('date_start', '__________'),
+            'date_start': date_start,
             'date_end': row.get('date_end', '__________'),
             'stoimost': row.get('stoimost', '0'),
             'doc_date': doc_date

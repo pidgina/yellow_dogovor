@@ -2,5 +2,7 @@ __pycache__/
 *.pyc
 .DS_Store
 ready_contracts/
+ready_contracts_test/
 .vscode/
-
+contract_batch_dev.py
+last_signature_debug.png
