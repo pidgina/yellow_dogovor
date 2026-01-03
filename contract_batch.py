@@ -5,7 +5,7 @@ import re
 from datetime import datetime, timedelta
 from pathlib import Path
 
-# Попытка импорта docx для создания профессиональных документов  123
+# Попытка импорта docx для создания профессиональных документов   123
 try:
     from docx import Document
     from docx.shared import Pt
