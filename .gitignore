@@ -6,3 +6,4 @@ ready_contracts_test/
 .vscode/
 contract_batch_dev.py
 last_signature_debug.png
+contracts.csv
