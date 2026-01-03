@@ -80,8 +80,8 @@ def random_date():
     end = max_date
     delta = (end - start).days
     d1 = start + datetime.timedelta(days=random.randint(0, delta))
-    # Пакетные работы могут длиться дольше, от 1 до 7 дней
-    d2 = d1 + datetime.timedelta(days=random.randint(1, 7))
+    # Работы выполняются в один день
+    d2 = d1 
     return d1.strftime('%d.%m.%Y'), d2.strftime('%d.%m.%Y')
 
 def generate_fake_data(filename='contracts.csv', count=100):

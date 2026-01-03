@@ -266,41 +266,57 @@ def batch_contracts(csv_file, output_dir="ready_contracts"):
         
         ispolnitel = global_ispolnitel if global_ispolnitel else row.get('ispolnitel', 'Не указан')
         
-        # Дата договора = За 0-3 дня до даты начала работ
-        date_start = row.get('date_start', '__________')
-        doc_date = get_random_doc_date(date_start)
+        # --- ВАЛИДАЦИЯ ДАТ ---
+        date_start_str = row.get('date_start', '__________')
+        
+        # Принудительно делаем все в один день
+        date_end_str = date_start_str
+        doc_date = date_start_str
         
         data = {
             'idx': next_idx,
             'zakazchik': row.get('zakazchik', '__________'),
             'ispolnitel': ispolnitel,
             'uslugi': row.get('uslugi', '__________'),
-            'date_start': date_start,
-            'date_end': row.get('date_end', '__________'),
+            'date_start': date_start_str,
+            'date_end': date_end_str,
             'stoimost': row.get('stoimost', '0'),
             'doc_date': doc_date
         }
         
         clean_zakazchik = sanitize_filename(data['zakazchik'])
         
-        if HAS_DOCX:
-            fname = f"Договор_{next_idx}_{clean_zakazchik}.docx"
-            create_docx_contract(data, output_path / fname)
-        else:
-            fname = f"Договор_{next_idx}_{clean_zakazchik}.txt"
-            create_txt_fallback(data, output_path / fname)
-        
-        next_idx += 1
-        count += 1
+        # --- СОХРАНЕНИЕ С ЗАЩИТОЙ ОТ ОШИБОК ДОСТУПА ---
+        try:
+            if HAS_DOCX:
+                fname = f"Договор_{next_idx}_{clean_zakazchik}.docx"
+                create_docx_contract(data, output_path / fname)
+            else:
+                fname = f"Договор_{next_idx}_{clean_zakazchik}.txt"
+                create_txt_fallback(data, output_path / fname)
+            
+            # Успешно сохранили - обновляем счетчики
+            next_idx += 1
+            count += 1
+            
+            # Красивый вывод прогресса в одну строку
+            print(f"Генерация: {count}/{limit} (Договор №{next_idx-1})   ", end='\r')
+            
+        except PermissionError:
+            print(f"\n[ОШИБКА] Не могу записать файл. Возможно, он открыт. Пропускаю этот номер...")
+            # Не увеличиваем count и next_idx, чтобы попробовать этот номер для следующего клиента
+            # Но переходим к следующим данным, чтобы не зациклиться
+            pass
+
         row_in_batch_idx += 1
         
-        if count % 10 == 0 or count == limit:
-            print(f"Готово: {count}/{limit} (Договор №{next_idx-1})...")
-
     fmt = "DOCX" if HAS_DOCX else "TXT"
-    print(f"\nУспех! Сгенерировано {count} договоров в формате {fmt}.")
+    print(f"\n\nУспех! Сгенерировано {count} договоров в формате {fmt}.")
     print(f"Нумерация завершена на номере: {next_idx - 1}")
     print(f"Папка: {output_path.absolute()}")
 
 if __name__ == "__main__":
-    batch_contracts("contracts.csv")
+    try:
+        batch_contracts("contracts.csv")
+    except KeyboardInterrupt:
+        print("\n\n⛔ Программа остановлена пользователем. Генерация прервана.")
